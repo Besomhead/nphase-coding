@@ -5,11 +5,12 @@ import com.nphase.entity.ProductCategory;
 import com.nphase.entity.ShoppingCart;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.summingInt;
 
 public class ShoppingCartService {
 
@@ -25,18 +26,8 @@ public class ShoppingCartService {
 
     public BigDecimal calculateTotalPrice(ShoppingCart shoppingCart) {
         List<Product> products = shoppingCart.getProducts();
-        Map<ProductCategory, Integer> quantityPerCategory = new HashMap<>();
-        products.forEach(
-            product -> {
-                ProductCategory category = product.getProductCategory();
-                if(quantityPerCategory.containsKey(category)) {
-                   quantityPerCategory.put(category, quantityPerCategory.get(category) + product.getQuantity());
-                } else {
-                    quantityPerCategory.put(category, product.getQuantity());
-                }
-
-            }
-        );
+        Map<ProductCategory, Integer> quantityPerCategory = products.stream()
+                .collect(groupingBy(Product::getProductCategory, summingInt(Product::getQuantity)));
 
         return products.stream()
                 .map(product -> productPrice(product, quantityPerCategory))
